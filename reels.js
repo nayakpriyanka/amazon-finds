@@ -11,6 +11,19 @@ let unlocked = false;
 let reels = [];
 let editingId = null;
 let query = "";
+let category = "all";
+
+const REEL_CATEGORIES = [
+  { id: "toys",     name: "🧸 Toys" },
+  { id: "food",     name: "🍎 Food" },
+  { id: "travel",   name: "✈️ Travel" },
+  { id: "books",    name: "📚 Books" },
+  { id: "babycare", name: "👶 Baby Care" },
+  { id: "home",     name: "🏠 Home" },
+  { id: "other",    name: "✨ Other" }
+];
+const catOf = r => (REEL_CATEGORIES.some(c => c.id === r.category) ? r.category : "other");
+const catLabel = id => (REEL_CATEGORIES.find(c => c.id === id) || {}).name || id;
 
 function escapeHTML(s) {
   return String(s ?? "").replace(/[&<>"']/g, ch =>
@@ -54,17 +67,57 @@ function linksToText(links) {
 
 // ── Rendering ──
 
+const reelText = r => `${r.title} ${catLabel(catOf(r))} ${(r.links || []).map(l => l.name).join(" ")}`;
+
+// Typo-tolerant match (see fuzzy.js).
+// Recomputed on every render (the list is small): typo matches only when nothing matches exactly.
+let exactOnly = false;
+function updateExactOnly() {
+  exactOnly = !!query && hasExactMatch(query, reels.map(reelText));
+}
+
 function matches(r) {
-  if (!query) return true;
-  const hay = `${r.title} ${r.reel} ${(r.links || []).map(l => `${l.name} ${l.url}`).join(" ")}`.toLowerCase();
-  return query.toLowerCase().split(/\s+/).every(w => hay.includes(w));
+  return !query || fuzzyScore(query, reelText(r), exactOnly) > 0;
+}
+
+// Links to copy for the current view. When searching, a reel that matches by title gives all its
+// links; otherwise only the products whose names match the search.
+function linksInView(list) {
+  const out = [];
+  for (const r of list) {
+    const linked = (r.links || []).filter(l => l.url);
+    const byTitle = !query || fuzzyScore(query, `${r.title} ${catLabel(catOf(r))}`, exactOnly) > 0;
+    for (const l of linked) if (byTitle || fuzzyScore(query, l.name, exactOnly) > 0) out.push(l);
+  }
+  const seen = new Set();
+  return out.filter(l => !seen.has(l.url) && seen.add(l.url));
 }
 
 const hasLink = r => (r.links || []).some(l => l.url);
 
+function renderCategoryChips(pool) {
+  const counts = {};
+  pool.filter(matches).forEach(r => (counts[catOf(r)] = (counts[catOf(r)] || 0) + 1));
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  const shown = REEL_CATEGORIES.filter(c => counts[c.id] || c.id === category);
+  $("cat-chips").hidden = !pool.length;
+  $("cat-chips").innerHTML = [{ id: "all", name: "All" }, ...shown].map(c =>
+    `<button type="button" class="chip${category === c.id ? " active" : ""}" data-cat="${c.id}">
+      ${escapeHTML(c.name)} <span class="n">${c.id === "all" ? total : counts[c.id] || 0}</span></button>`).join("");
+}
+
 function render() {
   // Visitors only see reels with at least one affiliate link; editors see everything so they can fix gaps.
-  const list = reels.filter(r => (unlocked || hasLink(r)) && matches(r));
+  updateExactOnly();
+  const pool = reels.filter(r => unlocked || hasLink(r));
+  renderCategoryChips(pool);
+  let list = pool.filter(r => matches(r) && (category === "all" || catOf(r) === category));
+  if (query) list = list.map(r => [r, fuzzyScore(query, reelText(r), exactOnly)]).sort((a, b) => b[1] - a[1]).map(x => x[0]);
+  const viewLinks = linksInView(list);
+  $("copy-view").hidden = !viewLinks.length;
+  $("copy-view").textContent = query
+    ? `📋 Copy ${viewLinks.length} link${viewLinks.length === 1 ? "" : "s"} for “${query}”`
+    : `📋 Copy all ${viewLinks.length} links`;
   $("result-count").textContent = `${list.length} reel${list.length === 1 ? "" : "s"}`;
 
   if (!reels.some(x => unlocked || hasLink(x))) {
@@ -75,7 +128,7 @@ function render() {
     return;
   }
   if (!list.length) {
-    $("reels").innerHTML = `<p class="empty">No reels match “${escapeHTML(query)}”.</p>`;
+    $("reels").innerHTML = `<p class="empty">No ${category === "all" ? "" : escapeHTML(catLabel(category).replace(/^\S+\s/, "")) + " "}reels${query ? ` match “${escapeHTML(query)}”` : " yet"}.</p>`;
     return;
   }
 
@@ -94,6 +147,7 @@ function render() {
     return `<article class="reel-card" data-id="${escapeHTML(r.id)}">
       ${previewHTML(r)}
       <div class="reel-body">
+        <span class="cat-badge">${escapeHTML(catLabel(catOf(r)))}</span>
         <h3>${escapeHTML(r.title || "Untitled reel")}</h3>
         ${unlocked && !hasLink(r) ? `<p class="hidden-note">Hidden from visitors until it has at least one Amazon link.</p>` : ""}
         <a class="reel-link" href="${escapeHTML(r.reel)}" target="_blank" rel="noopener noreferrer">${escapeHTML(r.reel)}</a>
@@ -189,6 +243,7 @@ function openEditor(reel) {
   $("editor-title").textContent = reel ? "Edit reel" : "Add a reel";
   $("save-btn").textContent = reel ? "Save changes" : "Save reel";
   $("f-reel").value = reel ? reel.reel : "";
+  $("f-cat").value = reel ? catOf(reel) : (category !== "all" ? category : "toys");
   $("f-title").value = reel ? reel.title : "";
   $("f-links").value = reel ? linksToText(reel.links) : "";
   $("f-key").value = getToken();
@@ -222,7 +277,7 @@ async function save(e) {
   if (!/^https?:\/\/\S+$/.test(reelLink)) { err.textContent = "Enter the full reel link, starting with https://"; $("f-reel").focus(); return; }
   if (!token) { err.textContent = "Enter your GitHub token to save (see the help link above)."; $("f-key").focus(); return; }
 
-  const fields = { reel: reelLink, title: $("f-title").value.trim(), links: parseLinks($("f-links").value) };
+  const fields = { reel: reelLink, category: $("f-cat").value, title: $("f-title").value.trim(), links: parseLinks($("f-links").value) };
   const id = editingId;
   $("save-btn").disabled = true;
   $("save-btn").textContent = "Saving…";
@@ -333,6 +388,18 @@ function init() {
   $("reel-form").addEventListener("submit", save);
   $("f-links").addEventListener("input", updateLinkCount);
   $("search").addEventListener("input", e => { query = e.target.value.trim(); render(); });
+  $("copy-view").addEventListener("click", () => {
+    const list = reels.filter(x => (unlocked || hasLink(x)) && matches(x) && (category === "all" || catOf(x) === category));
+    const lines = linksInView(list).map(l => (l.name ? `${l.name} — ${l.url}` : l.url));
+    copy(lines.join("\n"), `${lines.length} links copied`);
+  });
+  $("f-cat").innerHTML = REEL_CATEGORIES.map(c => `<option value="${c.id}">${escapeHTML(c.name)}</option>`).join("");
+  $("cat-chips").addEventListener("click", e => {
+    const btn = e.target.closest("[data-cat]");
+    if (!btn) return;
+    category = btn.dataset.cat;
+    render();
+  });
 
   $("reels").addEventListener("click", e => {
     const copyBtn = e.target.closest("[data-copy]");

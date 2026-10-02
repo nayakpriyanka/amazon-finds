@@ -29,6 +29,9 @@
       <button type="button" class="primary" id="add-btn" hidden>＋ Add reel</button>
       <button type="button" class="ghost" id="lock-btn">🔒 Editor login</button>
     </div>
+    <div class="wrap">
+      <div class="chips" id="cat-chips" aria-label="Category"></div>
+    </div>
   </div>
 
   <main class="wrap">
@@ -46,6 +49,9 @@
       <form id="reel-form" novalidate>
         <label for="f-reel">Reel link</label>
         <input id="f-reel" type="url" placeholder="https://www.instagram.com/reel/…" required />
+
+        <label for="f-cat">Category</label>
+        <select id="f-cat"></select>
 
         <label for="f-title">Title</label>
         <input id="f-title" type="text" placeholder="e.g. 5 busy toys for 1 year olds" />
@@ -74,6 +80,9 @@
         <span id="result-count" aria-live="polite"></span>
         <span class="source" id="source-status">Loading reels…</span>
       </div>
+      <div class="result-actions">
+        <button type="button" id="copy-view" hidden>📋 Copy all links</button>
+      </div>
     </div>
 
     <div class="reels" id="reels"></div>
@@ -81,6 +90,7 @@
 
   <div class="toast" id="toast" role="status"></div>
 
+  <script src="fuzzy.js"></script>
   <script src="reels.js"></script>
 </body>
 </html>

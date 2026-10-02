@@ -14,17 +14,27 @@ function escapeHTML(s) {
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
 }
 
+const searchText = item => `${item.n} ${item.t} ${item.a || ""} ${catName(item.c)}`;
+
+// Typo-tolerant match (see fuzzy.js): "pasta", "psta" and "pastas" all find pasta.
+let exactSearch = { q: null, exact: false };
+function exactOnly() {
+  if (exactSearch.q !== state.q) exactSearch = { q: state.q, exact: hasExactMatch(state.q, FINDS.map(searchText)) };
+  return exactSearch.exact;
+}
+
 function matchesSearch(item) {
-  if (!state.q) return true;
-  const hay = `${item.n} ${item.t} ${item.a || ""} ${catName(item.c)}`.toLowerCase();
-  return state.q.toLowerCase().split(/\s+/).every(word => hay.includes(word));
+  return !state.q || fuzzyScore(state.q, searchText(item), exactOnly()) > 0;
 }
 
 function inCategory(item) { return state.cat === "all" || item.c === state.cat; }
 function inAge(item) { return state.age === "all" || item.a === state.age; }
 
 function visibleItems() {
-  return FINDS.filter(i => inCategory(i) && inAge(i) && matchesSearch(i));
+  const items = FINDS.filter(i => inCategory(i) && inAge(i) && matchesSearch(i));
+  if (!state.q) return items;
+  // Closest matches first.
+  return items.map(i => [i, fuzzyScore(state.q, searchText(i), exactOnly())]).sort((a, b) => b[1] - a[1]).map(x => x[0]);
 }
 
 function renderCategoryChips() {
@@ -59,6 +69,9 @@ function renderList() {
   const linked = items.filter(i => i.l).length;
   $("result-count").textContent = `${items.length} item${items.length === 1 ? "" : "s"} · ${linked} link${linked === 1 ? "" : "s"}`;
   $("copy-all").disabled = !linked;
+  $("copy-all").textContent = state.q
+    ? `📋 Copy ${linked} link${linked === 1 ? "" : "s"} for “${state.q}”`
+    : `📋 Copy all ${linked} links`;
 
   if (!items.length) {
     $("list").innerHTML = `<li class="empty">No matches. Try a shorter search or pick “All”.</li>`;
@@ -144,6 +157,7 @@ async function loadLive() {
     : "Live from Google Sheet";
   status.classList.toggle("warn", failed.length > 0);
   dropUnlinked();
+  exactSearch = { q: null, exact: false };
   if (!CATEGORIES.some(c => c.id === state.cat)) state.cat = "all";
   updateTotal();
   render();

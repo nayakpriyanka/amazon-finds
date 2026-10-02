@@ -110,3 +110,13 @@ button.ghost:hover { border-color: var(--coral); }
   font-size: .8rem; font-weight: 600; color: #9a5b00;
   background: #fff0c2; border-radius: 8px; padding: .3rem .6rem; justify-self: start;
 }
+
+#cat-chips { margin-top: .6rem; }
+.editor select {
+  width: 100%; font: inherit; font-size: .95rem; padding: .55rem .8rem;
+  border: 2px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text);
+}
+.cat-badge {
+  justify-self: start; font-size: .75rem; font-weight: 700;
+  background: var(--bg); border-radius: 99px; padding: .15rem .6rem; color: var(--muted);
+}
