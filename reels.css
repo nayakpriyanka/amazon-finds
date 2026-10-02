@@ -105,3 +105,8 @@ button.ghost:hover { border-color: var(--coral); }
   .toolbar-row { flex-wrap: wrap; }
   .toolbar-row #search { flex-basis: 100%; }
 }
+
+.hidden-note {
+  font-size: .8rem; font-weight: 600; color: #9a5b00;
+  background: #fff0c2; border-radius: 8px; padding: .3rem .6rem; justify-self: start;
+}

@@ -60,11 +60,14 @@ function matches(r) {
   return query.toLowerCase().split(/\s+/).every(w => hay.includes(w));
 }
 
+const hasLink = r => (r.links || []).some(l => l.url);
+
 function render() {
-  const list = reels.filter(matches);
+  // Visitors only see reels with at least one affiliate link; editors see everything so they can fix gaps.
+  const list = reels.filter(r => (unlocked || hasLink(r)) && matches(r));
   $("result-count").textContent = `${list.length} reel${list.length === 1 ? "" : "s"}`;
 
-  if (!reels.length) {
+  if (!reels.some(x => unlocked || hasLink(x))) {
     $("reels").innerHTML = `<div class="empty-state">
       <h3>No reels yet</h3>
       <p>${unlocked ? "Click <strong>＋ Add reel</strong>, paste the reel link, give it a title and list the Amazon links shown in it." : "Reels added by the team will show up here."}</p>
@@ -77,7 +80,7 @@ function render() {
   }
 
   $("reels").innerHTML = list.map(r => {
-    const links = (r.links || []).filter(l => l.url || l.name);
+    const links = (r.links || []).filter(l => (unlocked ? l.url || l.name : l.url));
     const linkItems = links.length
       ? links.map((l, i) => `<li>
           <span class="lname">${escapeHTML(l.name || "Amazon link")}</span>
@@ -92,6 +95,7 @@ function render() {
       ${previewHTML(r)}
       <div class="reel-body">
         <h3>${escapeHTML(r.title || "Untitled reel")}</h3>
+        ${unlocked && !hasLink(r) ? `<p class="hidden-note">Hidden from visitors until it has at least one Amazon link.</p>` : ""}
         <a class="reel-link" href="${escapeHTML(r.reel)}" target="_blank" rel="noopener noreferrer">${escapeHTML(r.reel)}</a>
         <ol class="reel-links">${linkItems}</ol>
         <div class="card-actions">

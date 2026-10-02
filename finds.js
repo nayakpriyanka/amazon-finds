@@ -117,6 +117,13 @@ async function copy(text, msg) {
   }
 }
 
+// Only items with an affiliate link are shown.
+function dropUnlinked() {
+  FINDS.splice(0, FINDS.length, ...FINDS.filter(i => i.l));
+  const used = new Set(FINDS.map(i => i.c));
+  CATEGORIES.splice(0, CATEGORIES.length, ...CATEGORIES.filter(c => used.has(c.id)));
+}
+
 function updateTotal() {
   $("total-count").textContent = FINDS.filter(i => i.l).length;
 }
@@ -136,12 +143,14 @@ async function loadLive() {
     ? `Live from Google Sheet · saved copy for: ${failed.join(", ")}`
     : "Live from Google Sheet";
   status.classList.toggle("warn", failed.length > 0);
+  dropUnlinked();
   if (!CATEGORIES.some(c => c.id === state.cat)) state.cat = "all";
   updateTotal();
   render();
 }
 
 function init() {
+  dropUnlinked();
   updateTotal();
 
   const p = new URLSearchParams(location.search);

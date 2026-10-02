@@ -40,17 +40,22 @@ function cardHTML(toy) {
     `;
 }
 
+// Only items with an affiliate link are shown anywhere on the page.
+function dropUnlinked() {
+  for (const key of Object.keys(TOYS)) TOYS[key] = TOYS[key].filter(toy => toy.link);
+}
+
 function renderToys() {
   for (const [key, gridId] of Object.entries(SECTIONS)) {
     const grid = document.getElementById(gridId);
     const toys = TOYS[key] || [];
+    const empty = !toys.length;
 
-    if (!toys.length) {
-      grid.innerHTML = '<p class="empty">No toys added yet — check back soon!</p>';
-      continue;
-    }
-
-    grid.innerHTML = toys.map(cardHTML).join("");
+    // Hide age groups that have nothing to buy yet, along with their nav chip.
+    grid.closest("section").hidden = empty;
+    const navLink = document.querySelector(`.age-nav a[href="#age-${key}"]`);
+    if (navLink) navLink.hidden = empty;
+    grid.innerHTML = empty ? "" : toys.map(cardHTML).join("");
   }
 }
 
@@ -118,7 +123,9 @@ function renderFinder() {
   const items = currentItems();
   document.getElementById("results-grid").innerHTML = items.length
     ? items.map(cardHTML).join("")
-    : '<p class="empty">Nothing in this category for this age yet — check back soon!</p>';
+    : `<p class="empty">No picks here for this age yet. <a href="finds.html">Browse 800+ Amazon finds</a> — you can filter by age there.</p>`;
+  document.querySelector(".link-list-box").hidden = !items.length;
+  document.querySelector(".share-bar").hidden = !items.length;
 
   const linked = items.filter(item => item.link);
   document.getElementById("link-list").innerHTML = linked.length
@@ -165,6 +172,7 @@ function initFinder() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  dropUnlinked();
   renderToys();
   initFinder();
 });
