@@ -26,11 +26,21 @@
     <div class="wrap toolbar-row">
       <label for="search" class="visually-hidden">Search reels</label>
       <input id="search" type="search" placeholder="Search reels or products…" autocomplete="off" />
-      <button type="button" class="primary" id="add-btn">＋ Add reel</button>
+      <button type="button" class="primary" id="add-btn" hidden>＋ Add reel</button>
+      <button type="button" class="ghost" id="lock-btn">🔒 Editor login</button>
     </div>
   </div>
 
   <main class="wrap">
+    <form class="unlock" id="unlock-form" hidden>
+      <label for="unlock-pw">Editor password</label>
+      <div class="unlock-row">
+        <input id="unlock-pw" type="password" autocomplete="current-password" />
+        <button type="submit" class="primary">Unlock</button>
+        <button type="button" id="unlock-cancel" class="ghost">Cancel</button>
+      </div>
+      <p class="form-error" id="unlock-error" role="alert"></p>
+    </form>
     <section class="editor" id="editor" hidden>
       <h2 id="editor-title">Add a reel</h2>
       <form id="reel-form" novalidate>

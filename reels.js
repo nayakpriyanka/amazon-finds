@@ -1,6 +1,13 @@
 const $ = id => document.getElementById(id);
 const KEY_STORE = "reels-github-token";
 
+const UNLOCK_STORE = "reels-editor-unlocked";
+
+// Editing is hidden behind a password. Only a salted PBKDF2 hash is stored here, never the password.
+// This only hides the editing controls; saving still requires a GitHub token with write access.
+const EDITOR_LOCK = { salt: "61382fd31322a5cf59c983583fe1812e", iterations: 310000, hash: "50afc500f756c4407d7f11ffe9a051742a72641069943ec4a3c7ef9df34de86b" };
+
+let unlocked = false;
 let reels = [];
 let editingId = null;
 let query = "";
@@ -60,7 +67,7 @@ function render() {
   if (!reels.length) {
     $("reels").innerHTML = `<div class="empty-state">
       <h3>No reels yet</h3>
-      <p>Click <strong>＋ Add reel</strong>, paste the reel link, give it a title and list the Amazon links shown in it.</p>
+      <p>${unlocked ? "Click <strong>＋ Add reel</strong>, paste the reel link, give it a title and list the Amazon links shown in it." : "Reels added by the team will show up here."}</p>
     </div>`;
     return;
   }
@@ -89,8 +96,8 @@ function render() {
         <ol class="reel-links">${linkItems}</ol>
         <div class="card-actions">
           <button type="button" data-act="copy-all" ${links.some(l => l.url) ? "" : "disabled"}>📋 Copy all links</button>
-          <button type="button" data-act="edit">✏️ Edit</button>
-          <button type="button" data-act="delete" class="danger">🗑 Delete</button>
+          ${unlocked ? `<button type="button" data-act="edit">✏️ Edit</button>
+          <button type="button" data-act="delete" class="danger">🗑 Delete</button>` : ""}
         </div>
       </div>
     </article>`;
@@ -256,6 +263,42 @@ async function remove(reel, btn) {
   }
 }
 
+// ── Editor lock ──
+
+const hexToBytes = hex => Uint8Array.from(hex.match(/../g), b => parseInt(b, 16));
+const bytesToHex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+
+async function passwordMatches(pw) {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", hash: "SHA-256", salt: hexToBytes(EDITOR_LOCK.salt), iterations: EDITOR_LOCK.iterations }, key, 256);
+  return bytesToHex(bits) === EDITOR_LOCK.hash;
+}
+
+function setUnlocked(on) {
+  unlocked = on;
+  try { on ? localStorage.setItem(UNLOCK_STORE, EDITOR_LOCK.hash.slice(0, 16)) : localStorage.removeItem(UNLOCK_STORE); } catch {}
+  $("add-btn").hidden = !on;
+  $("lock-btn").textContent = on ? "🔓 Lock editing" : "🔒 Editor login";
+  $("unlock-form").hidden = true;
+  if (!on) closeEditor();
+  render();
+}
+
+async function unlock(e) {
+  e.preventDefault();
+  const pw = $("unlock-pw").value;
+  $("unlock-error").textContent = "";
+  if (await passwordMatches(pw)) {
+    $("unlock-pw").value = "";
+    setUnlocked(true);
+    toast("Editing unlocked");
+  } else {
+    $("unlock-error").textContent = "That password isn't right.";
+    $("unlock-pw").select();
+  }
+}
+
 // ── Copy & toast ──
 
 function toast(msg) {
@@ -272,7 +315,16 @@ async function copy(text, msg) {
 }
 
 function init() {
-  $("add-btn").addEventListener("click", () => openEditor(null));
+  $("add-btn").addEventListener("click", () => { if (unlocked) openEditor(null); });
+  $("lock-btn").addEventListener("click", () => {
+    if (unlocked) { setUnlocked(false); toast("Editing locked"); return; }
+    $("unlock-form").hidden = !$("unlock-form").hidden;
+    if (!$("unlock-form").hidden) $("unlock-pw").focus();
+  });
+  $("unlock-form").addEventListener("submit", unlock);
+  $("unlock-cancel").addEventListener("click", () => { $("unlock-form").hidden = true; });
+  try { unlocked = localStorage.getItem(UNLOCK_STORE) === EDITOR_LOCK.hash.slice(0, 16); } catch {}
+  if (unlocked) setUnlocked(true);
   $("cancel-btn").addEventListener("click", closeEditor);
   $("reel-form").addEventListener("submit", save);
   $("f-links").addEventListener("input", updateLinkCount);
@@ -290,6 +342,7 @@ function init() {
     if (!btn) return;
     const r = reels.find(x => x.id === btn.closest(".reel-card").dataset.id);
     if (!r) return;
+    if (!unlocked && btn.dataset.act !== "copy-all") return;
     if (btn.dataset.act === "edit") openEditor(r);
     if (btn.dataset.act === "delete") remove(r, btn);
     if (btn.dataset.act === "copy-all") {

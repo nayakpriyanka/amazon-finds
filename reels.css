@@ -81,3 +81,27 @@ button.primary:disabled { opacity: .6; cursor: default; }
   .reel-card { grid-template-columns: 1fr; }
   .preview { margin-inline: auto; max-width: 220px; }
 }
+
+button.ghost {
+  font: inherit; font-weight: 600; font-size: .85rem; cursor: pointer; white-space: nowrap;
+  background: var(--card); color: var(--text); border: 2px solid var(--line);
+  border-radius: 12px; padding: .6rem .9rem;
+}
+button.ghost:hover { border-color: var(--coral); }
+
+.unlock {
+  background: var(--card); border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  padding: 1rem 1.25rem; margin-top: 1rem; display: grid; gap: .4rem;
+}
+.unlock label { font-weight: 700; font-size: .85rem; }
+.unlock-row { display: flex; gap: .5rem; flex-wrap: wrap; }
+.unlock-row input {
+  flex: 1; min-width: 0; font: inherit; padding: .55rem .8rem;
+  border: 2px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text);
+}
+.unlock-row input:focus { outline: none; border-color: var(--coral); }
+
+@media (max-width: 500px) {
+  .toolbar-row { flex-wrap: wrap; }
+  .toolbar-row #search { flex-basis: 100%; }
+}

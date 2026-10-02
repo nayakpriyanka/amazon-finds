@@ -21,6 +21,8 @@ Tiny Testers picks live in `toys.js`.
 
 Reels are stored in `reels.json` in this repo. Anyone can view them on the Reels page.
 
+Editing controls are hidden until an editor unlocks them with the team password (via **🔒 Editor login**). Only a salted hash of the password is stored in `reels.js`; to change the password, ask Claude to regenerate the hash. This only hides the buttons — saving is protected by the GitHub token below.
+
 To add, edit or delete from the page, each editor needs a GitHub token once per browser:
 [create a fine-grained token](https://github.com/settings/personal-access-tokens/new) →
 Repository access: **Only select repositories → amazon-finds** → Permissions: **Contents → Read and write**.
