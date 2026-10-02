@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amazon Finds — Link Finder</title>
+  <link rel="stylesheet" href="finds.css" />
+</head>
+<body>
+
+  <header class="top">
+    <div class="wrap top-inner">
+      <div>
+        <h1>🛍️ Amazon Finds</h1>
+        <p class="sub"><span id="total-count"></span> affiliate links from the Mommy Kia workbook</p>
+      </div>
+      <a class="back" href="index.html">🧸 Tiny Testers</a>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="wrap">
+      <label for="search" class="visually-hidden">Search</label>
+      <input id="search" type="search" placeholder="Search items, e.g. potty book, sipper, puzzle…" autocomplete="off" />
+      <div class="chips" id="cat-chips" aria-label="Category"></div>
+      <div class="chips ages" id="age-chips" aria-label="Age group"></div>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <div class="result-bar">
+      <span id="result-count" aria-live="polite"></span>
+      <div class="result-actions">
+        <button type="button" id="copy-all">📋 Copy all links</button>
+        <button type="button" id="copy-view">🔗 Copy link to this view</button>
+      </div>
+    </div>
+    <ul class="list" id="list"></ul>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="finds-data.js"></script>
+  <script src="finds.js"></script>
+</body>
+</html>

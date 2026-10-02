@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tiny Testers — Toddler Toys, Tried & Tested</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div class="logo">🧸 Tiny Testers</div>
+      <p class="tagline">Toddler toys tried & tested by real kids</p>
+      <a class="finds-link" href="finds.html">🛍️ Browse all 800+ Amazon finds →</a>
+    </div>
+  </header>
+
+  <section class="finder" id="finder">
+    <h2>🎁 Find toys &amp; books by age</h2>
+    <p class="finder-sub">Enter your child's age to get a list you can share with family &amp; friends.</p>
+    <form class="finder-form" id="finder-form">
+      <label for="age-value" class="visually-hidden">Age</label>
+      <input id="age-value" type="number" min="0" max="10" step="1" placeholder="e.g. 8" required />
+      <label for="age-unit" class="visually-hidden">Unit</label>
+      <select id="age-unit">
+        <option value="months">months</option>
+        <option value="years">years</option>
+      </select>
+      <button type="submit">Show list</button>
+    </form>
+
+    <div class="finder-results" id="finder-results" hidden>
+      <div class="results-head">
+        <h3 id="results-title"></h3>
+        <div class="type-tabs" role="tablist">
+          <button type="button" data-type="all" class="active">All</button>
+          <button type="button" data-type="toy">🧸 Toys</button>
+          <button type="button" data-type="book">📚 Books</button>
+        </div>
+      </div>
+      <div class="toy-grid" id="results-grid"></div>
+      <div class="link-list-box">
+        <h4>🔗 Links for this list</h4>
+        <ol class="link-list" id="link-list"></ol>
+      </div>
+      <div class="share-bar">
+        <span>Share this list:</span>
+        <button type="button" id="share-native" hidden>📤 Share</button>
+        <a id="share-whatsapp" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>
+        <button type="button" id="share-copy-link">🔗 Copy link</button>
+        <button type="button" id="share-copy-list">📋 Copy list</button>
+        <span class="share-status" id="share-status" role="status"></span>
+      </div>
+    </div>
+  </section>
+
+  <nav class="age-nav">
+    <a href="#age-0-3">0–3 mo</a>
+    <a href="#age-3-6">3–6 mo</a>
+    <a href="#age-6-9">6–9 mo</a>
+    <a href="#age-9-12">9–12 mo</a>
+    <a href="#age-1-2">1–2 yr</a>
+    <a href="#age-2-3">2–3 yr</a>
+    <a href="#age-3-4">3–4 yr</a>
+  </nav>
+
+  <main>
+
+    <section id="age-0-3" class="age-section">
+      <div class="age-header">
+        <span class="age-badge">0 – 3 months</span>
+        <h2>Newborns</h2>
+        <p>High-contrast, sensory, and calming toys for little ones just discovering the world.</p>
+      </div>
+      <div class="toy-grid" id="grid-0-3"></div>
+    </section>
+
+    <section id="age-3-6" class="age-section">
+      <div class="age-header">
+        <span class="age-badge">3 – 6 months</span>
+        <h2>Reaching & Grasping</h2>
+        <p>Rattles, teethers, and sensory toys as babies start grabbing everything in sight.</p>
+      </div>
+      <div class="toy-grid" id="grid-3-6"></div>
+    </section>
+
+    <section id="age-6-9" class="age-section">
+      <div class="age-header">
+        <span class="age-badge">6 – 9 months</span>
+        <h2>Sitters & Rollers</h2>
+        <p>Toys that reward sitting up, rolling, and early crawling exploration.</p>
+      </div>
+      <div class="toy-grid" id="grid-6-9"></div>
+    </section>
+
+    <section id="age-9-12" class="age-section">
+      <div class="age-header">
+        <span class="age-badge">9 – 12 months</span>
+        <h2>Almost Walkers</h2>
+        <p>Cause-and-effect, stacking, and music toys for babies on the move.</p>
+      </div>
+      <div class="toy-grid" id="grid-9-12"></div>
+    </section>
+
+    <section id="age-1-2" class="age-section">
+      <div class="age-header">
+        <span class="age-badge">1 – 2 years</span>
+        <h2>First Walkers</h2>
+        <p>Toys that support walking, stacking, sorting, and big emotions.</p>
+      </div>
+      <div class="toy-grid" id="grid-1-2"></div>
+    </section>
+
+    <section id="age-2-3" class="age-section">
+      <div class="age-header">
+        <span class="age-badge">2 – 3 years</span>
+        <h2>Curious Explorers</h2>
+        <p>Imaginative play, art, and building for little minds on the go.</p>
+      </div>
+      <div class="toy-grid" id="grid-2-3"></div>
+    </section>
+
+    <section id="age-3-4" class="age-section">
+      <div class="age-header">
+        <span class="age-badge">3 – 4 years</span>
+        <h2>Creative Thinkers</h2>
+        <p>Complex play, role-play, and early STEM toys.</p>
+      </div>
+      <div class="toy-grid" id="grid-3-4"></div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>Made with ❤️ by parents, for parents · All toys personally tested</p>
+    <p class="footer-note">Links marked with 🛒 are Amazon affiliate links.</p>
+  </footer>
+
+  <script src="toys.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
