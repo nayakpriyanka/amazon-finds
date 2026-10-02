@@ -32,6 +32,7 @@ body {
 .top h1 { font-size: 1.8rem; letter-spacing: -0.5px; }
 .sub { color: #5a3a3a; }
 #total-count { font-weight: 700; }
+.top-nav { display: flex; gap: .4rem; flex-wrap: wrap; }
 .back {
   color: var(--text); font-weight: 600; text-decoration: none; font-size: .9rem;
   background: rgba(255,255,255,.6); padding: .4rem .9rem; border-radius: 99px;

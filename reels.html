@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amazon Finds — Reels</title>
+  <link rel="stylesheet" href="finds.css" />
+  <link rel="stylesheet" href="reels.css" />
+</head>
+<body>
+
+  <header class="top">
+    <div class="wrap top-inner">
+      <div>
+        <h1>🎬 Reels</h1>
+        <p class="sub">Each reel with the Amazon links shown in it</p>
+      </div>
+      <nav class="top-nav">
+        <a class="back" href="finds.html">🛍️ Link finder</a>
+        <a class="back" href="index.html">🧸 Tiny Testers</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="wrap toolbar-row">
+      <label for="search" class="visually-hidden">Search reels</label>
+      <input id="search" type="search" placeholder="Search reels or products…" autocomplete="off" />
+      <button type="button" class="primary" id="add-btn">＋ Add reel</button>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <section class="editor" id="editor" hidden>
+      <h2 id="editor-title">Add a reel</h2>
+      <form id="reel-form" novalidate>
+        <label for="f-reel">Reel link</label>
+        <input id="f-reel" type="url" placeholder="https://www.instagram.com/reel/…" required />
+
+        <label for="f-title">Title</label>
+        <input id="f-title" type="text" placeholder="e.g. 5 busy toys for 1 year olds" />
+
+        <label for="f-links">Amazon links <span class="hint">one per line — “Product name - link” or just the link</span></label>
+        <textarea id="f-links" rows="6" placeholder="Busy board - https://amzn.to/4eiTX5V&#10;Stacking cups - https://amzn.to/3PtzS07"></textarea>
+        <p class="hint" id="f-links-count"></p>
+
+        <label for="f-key">Team passcode</label>
+        <input id="f-key" type="password" autocomplete="current-password" placeholder="Ask the admin" />
+
+        <p class="form-error" id="form-error" role="alert"></p>
+        <div class="form-actions">
+          <button type="submit" class="primary" id="save-btn">Save reel</button>
+          <button type="button" id="cancel-btn">Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <div class="result-bar">
+      <div>
+        <span id="result-count" aria-live="polite"></span>
+        <span class="source" id="source-status">Loading reels…</span>
+      </div>
+    </div>
+
+    <div class="reels" id="reels"></div>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="reels-config.js"></script>
+  <script src="reels.js"></script>
+</body>
+</html>

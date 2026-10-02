@@ -1,0 +1,83 @@
+/* Reels page — builds on finds.css tokens and components. */
+
+.toolbar-row { display: flex !important; gap: .6rem; align-items: center; }
+.toolbar-row #search { flex: 1; min-width: 0; }
+
+button.primary {
+  font: inherit; font-weight: 700; font-size: .9rem; cursor: pointer; white-space: nowrap;
+  background: var(--coral); color: #fff; border: 2px solid var(--coral);
+  border-radius: 12px; padding: .6rem 1rem;
+}
+button.primary:hover:not(:disabled) { background: #e07474; border-color: #e07474; }
+button.primary:disabled { opacity: .6; cursor: default; }
+
+/* ── Editor ── */
+.editor {
+  background: var(--card); border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  padding: 1.25rem; margin-top: 1rem; scroll-margin-top: 6rem;
+}
+.editor h2 { font-size: 1.2rem; margin-bottom: .75rem; }
+.editor form { display: grid; gap: .35rem; }
+.editor label { font-weight: 700; font-size: .85rem; margin-top: .5rem; }
+.editor input, .editor textarea {
+  width: 100%; font: inherit; font-size: .95rem; padding: .55rem .8rem;
+  border: 2px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text);
+}
+.editor textarea { resize: vertical; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }
+.editor input:focus, .editor textarea:focus { outline: none; border-color: var(--coral); }
+.hint { font-weight: 400; font-size: .78rem; color: var(--muted); }
+.form-error { color: #a00; font-weight: 600; font-size: .85rem; min-height: 1.2em; margin-top: .3rem; }
+.form-actions { display: flex; gap: .5rem; }
+.form-actions button:not(.primary) {
+  font: inherit; font-weight: 600; cursor: pointer; padding: .6rem 1rem;
+  border-radius: 12px; border: 2px solid var(--line); background: var(--card); color: var(--text);
+}
+
+/* ── Reel cards ── */
+.reels { display: grid; gap: 1.25rem; margin-bottom: 3rem; }
+
+.reel-card {
+  display: grid; grid-template-columns: 300px 1fr; gap: 1.25rem;
+  background: var(--card); border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  padding: 1rem; align-items: start;
+}
+
+.preview {
+  width: 100%; max-width: 300px; aspect-ratio: 9 / 16; max-height: 540px;
+  border-radius: 12px; overflow: hidden; background: #f3ebe5;
+}
+.preview iframe { width: 100%; height: 100%; border: 0; display: block; }
+.preview.fallback {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .4rem;
+  color: var(--text); font-weight: 700; text-decoration: none;
+}
+.preview.fallback span { font-size: 2.5rem; }
+
+.reel-body { min-width: 0; display: grid; gap: .5rem; }
+.reel-body h3 { font-size: 1.15rem; text-wrap: balance; }
+.reel-link { font-size: .8rem; color: var(--muted); overflow-wrap: anywhere; }
+
+.reel-links { padding-left: 1.3rem; display: grid; gap: .5rem; margin-top: .25rem; }
+.reel-links li { font-size: .9rem; }
+.lname { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.lrow { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+
+.card-actions { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .5rem; }
+.card-actions button {
+  font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer;
+  padding: .35rem .8rem; border-radius: 99px; border: 2px solid var(--line); background: var(--card); color: var(--text);
+}
+.card-actions button:hover:not(:disabled) { border-color: var(--coral); }
+.card-actions button:disabled { opacity: .4; cursor: default; }
+.card-actions .danger:hover { border-color: #d66; color: #a00; }
+
+.empty-state {
+  background: var(--card); border-radius: 14px; padding: 2.5rem 1.5rem; text-align: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06); color: var(--muted);
+}
+.empty-state h3 { color: var(--text); margin-bottom: .4rem; }
+
+@media (max-width: 700px) {
+  .reel-card { grid-template-columns: 1fr; }
+  .preview { margin-inline: auto; max-width: 220px; }
+}
