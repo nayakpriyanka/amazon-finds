@@ -17,13 +17,14 @@ The link finder reads the Google Sheet live every time it opens (see `sheet-conf
 
 Tiny Testers picks live in `toys.js`.
 
-## Reels setup (one time)
+## Reels
 
-Reels are stored in a **Reels** tab of the Google Sheet via a small Apps Script:
+Reels are stored in `reels.json` in this repo. Anyone can view them on the Reels page.
 
-1. Open the Google Sheet → **Extensions → Apps Script**.
-2. Paste in `apps-script/Reels.gs` and change `TEAM_KEY` to your own passcode.
-3. **Deploy → New deployment → Web app**, Execute as **Me**, Who has access **Anyone** → Deploy.
-4. Put the Web app URL (ends in `/exec`) in `reels-config.js`.
+To add, edit or delete from the page, each editor needs a GitHub token once per browser:
+[create a fine-grained token](https://github.com/settings/personal-access-tokens/new) →
+Repository access: **Only select repositories → amazon-finds** → Permissions: **Contents → Read and write**.
+Paste it into the "GitHub token" field when saving; the browser remembers it.
 
-The team enters the passcode once on the Reels page to add, edit or delete. Rows can also be edited directly in the Reels tab.
+Each save is a commit to `reels.json`, so the change appears for everyone after the site redeploys (about a minute).
+You can also edit `reels.json` directly on GitHub.

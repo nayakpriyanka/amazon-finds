@@ -1,5 +1,5 @@
 const $ = id => document.getElementById(id);
-const KEY_STORE = "reels-team-key";
+const KEY_STORE = "reels-github-token";
 
 let reels = [];
 let editingId = null;
@@ -97,19 +97,54 @@ function render() {
   }).join("");
 }
 
-// ── Backend (Google Apps Script web app) ──
+// ── Storage: reels.json in the GitHub repo ──
+// Anyone can read it. Saving commits the updated file through the GitHub API,
+// using a fine-grained token (Contents: read & write on this repo) kept in the editor's browser.
 
-const configured = () => typeof REELS_CONFIG !== "undefined" && /^https:\/\//.test(REELS_CONFIG.scriptUrl || "");
+const REPO = { owner: "nayakpriyanka", repo: "amazon-finds", branch: "main", path: "reels.json" };
+const API_URL = `https://api.github.com/repos/${REPO.owner}/${REPO.repo}/contents/${REPO.path}`;
 
-async function api(body) {
-  const res = body
-    ? await fetch(REELS_CONFIG.scriptUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) })
-    : await fetch(REELS_CONFIG.scriptUrl, { cache: "no-store" });
-  if (!res.ok) throw new Error(`The sheet returned an error (HTTP ${res.status}).`);
-  const data = await res.json();
-  if (!data.ok) { const e = new Error(data.error || "Something went wrong."); e.code = data.code; throw e; }
-  return data.reels || [];
+const getToken = () => { try { return localStorage.getItem(KEY_STORE) || ""; } catch { return ""; } };
+const setToken = t => { try { t ? localStorage.setItem(KEY_STORE, t) : localStorage.removeItem(KEY_STORE); } catch {} };
+
+const toBase64 = text => btoa(String.fromCharCode(...new TextEncoder().encode(text)));
+const fromBase64 = b64 => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\s/g, "")), c => c.charCodeAt(0)));
+
+function githubError(res, data) {
+  if (res.status === 401) return Object.assign(new Error("GitHub didn't accept that token. Check it and try again."), { code: "bad_token" });
+  if (res.status === 403 || res.status === 404) return Object.assign(new Error("That token can't edit this repo. It needs Contents: Read and write access to nayakpriyanka/amazon-finds."), { code: "bad_token" });
+  return new Error((data && data.message) || `GitHub returned an error (HTTP ${res.status}).`);
 }
+
+// Latest file straight from GitHub (needs a token; avoids the site's cache).
+async function fetchRemote(token) {
+  const res = await fetch(`${API_URL}?ref=${REPO.branch}&t=${Date.now()}`, {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" }, cache: "no-store"
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw githubError(res, data);
+  return { sha: data.sha, list: JSON.parse(fromBase64(data.content) || "[]") };
+}
+
+// Applies one change to the latest file and commits it. Retries once if someone saved in between.
+async function commitChange(token, change, message) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { sha, list } = await fetchRemote(token);
+    const next = change(list);
+    const res = await fetch(API_URL, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "Content-Type": "application/json" },
+      body: JSON.stringify({ message, branch: REPO.branch, sha, content: toBase64(JSON.stringify(next, null, 2) + "\n") })
+    });
+    const data = await res.json().catch(() => null);
+    if (res.ok) return next;
+    if ((res.status === 409 || res.status === 422) && attempt === 0) continue;
+    throw githubError(res, data);
+  }
+}
+
+const newId = () => (crypto.randomUUID ? crypto.randomUUID() : `r${Date.now()}${Math.random().toString(36).slice(2, 8)}`);
+const sorted = list => [...list].sort((a, b) => String(b.added || "").localeCompare(String(a.added || "")));
 
 function setStatus(text, warn) {
   const el = $("source-status");
@@ -118,15 +153,19 @@ function setStatus(text, warn) {
 }
 
 async function load() {
-  if (!configured()) {
-    setStatus("Not connected to the Google Sheet yet — see apps-script/Reels.gs to set it up.", true);
-    render();
-    return;
-  }
+  const token = getToken();
   try {
-    reels = (await api()).reverse();
-    setStatus("Live from Google Sheet");
+    if (token) {
+      reels = sorted((await fetchRemote(token)).list);
+      setStatus("Saved in GitHub · you can edit");
+    } else {
+      const res = await fetch(`reels.json?t=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      reels = sorted(await res.json());
+      setStatus("Saved in GitHub");
+    }
   } catch (err) {
+    if (err.code === "bad_token") { setToken(""); return load(); }
     setStatus(`Couldn't load reels: ${err.message}`, true);
   }
   render();
@@ -141,7 +180,8 @@ function openEditor(reel) {
   $("f-reel").value = reel ? reel.reel : "";
   $("f-title").value = reel ? reel.title : "";
   $("f-links").value = reel ? linksToText(reel.links) : "";
-  try { $("f-key").value = localStorage.getItem(KEY_STORE) || ""; } catch {}
+  $("f-key").value = getToken();
+  $("token-help").hidden = !!getToken();
   $("form-error").textContent = "";
   updateLinkCount();
   $("editor").hidden = false;
@@ -165,44 +205,52 @@ function updateLinkCount() {
 async function save(e) {
   e.preventDefault();
   const reelLink = $("f-reel").value.trim();
-  const key = $("f-key").value.trim();
+  const token = $("f-key").value.trim();
   const err = $("form-error");
 
   if (!/^https?:\/\/\S+$/.test(reelLink)) { err.textContent = "Enter the full reel link, starting with https://"; $("f-reel").focus(); return; }
-  if (!configured()) { err.textContent = "The page isn't connected to the Google Sheet yet, so it can't save. Set up apps-script/Reels.gs first."; return; }
-  if (!key) { err.textContent = "Enter the team passcode to save."; $("f-key").focus(); return; }
+  if (!token) { err.textContent = "Enter your GitHub token to save (see the help link above)."; $("f-key").focus(); return; }
 
-  const reel = { id: editingId || undefined, reel: reelLink, title: $("f-title").value.trim(), links: parseLinks($("f-links").value) };
+  const fields = { reel: reelLink, title: $("f-title").value.trim(), links: parseLinks($("f-links").value) };
+  const id = editingId;
   $("save-btn").disabled = true;
+  $("save-btn").textContent = "Saving…";
   err.textContent = "";
   try {
-    reels = (await api({ action: editingId ? "update" : "create", key, reel })).reverse();
-    try { localStorage.setItem(KEY_STORE, key); } catch {}
-    toast(editingId ? "Reel updated" : "Reel added");
+    const next = await commitChange(token, list => {
+      if (!id) return [...list, { id: newId(), ...fields, added: new Date().toISOString() }];
+      if (!list.some(r => r.id === id)) throw new Error("That reel was deleted by someone else. Reload the page.");
+      return list.map(r => (r.id === id ? { ...r, ...fields, updated: new Date().toISOString() } : r));
+    }, id ? `Update reel: ${fields.title || fields.reel}` : `Add reel: ${fields.title || fields.reel}`);
+    setToken(token);
+    reels = sorted(next);
+    setStatus("Saved in GitHub · you can edit");
+    toast(id ? "Reel updated" : "Reel added");
     closeEditor();
     render();
   } catch (ex) {
-    if (ex.code === "bad_key") { try { localStorage.removeItem(KEY_STORE); } catch {} }
+    if (ex.code === "bad_token") setToken("");
     err.textContent = ex.message;
   } finally {
     $("save-btn").disabled = false;
+    $("save-btn").textContent = editingId ? "Save changes" : "Save reel";
   }
 }
 
 async function remove(reel, btn) {
-  if (!confirm(`Delete “${reel.title || reel.reel}”? This removes it from the Google Sheet too.`)) return;
-  let key = "";
-  try { key = localStorage.getItem(KEY_STORE) || ""; } catch {}
-  if (!key) key = (prompt("Team passcode") || "").trim();
-  if (!key) return;
+  if (!confirm(`Delete “${reel.title || reel.reel}”?`)) return;
+  const token = getToken() || (prompt("Your GitHub token (needed to save changes)") || "").trim();
+  if (!token) return;
   btn.disabled = true;
   try {
-    reels = (await api({ action: "delete", key, reel: { id: reel.id } })).reverse();
-    try { localStorage.setItem(KEY_STORE, key); } catch {}
+    const next = await commitChange(token, list => list.filter(r => r.id !== reel.id),
+      `Delete reel: ${reel.title || reel.reel}`);
+    setToken(token);
+    reels = sorted(next);
     toast("Reel deleted");
     render();
   } catch (ex) {
-    if (ex.code === "bad_key") { try { localStorage.removeItem(KEY_STORE); } catch {} }
+    if (ex.code === "bad_token") setToken("");
     toast(ex.message);
     btn.disabled = false;
   }

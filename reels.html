@@ -44,8 +44,12 @@
         <textarea id="f-links" rows="6" placeholder="Busy board - https://amzn.to/4eiTX5V&#10;Stacking cups - https://amzn.to/3PtzS07"></textarea>
         <p class="hint" id="f-links-count"></p>
 
-        <label for="f-key">Team passcode</label>
-        <input id="f-key" type="password" autocomplete="current-password" placeholder="Ask the admin" />
+        <label for="f-key">GitHub token <span class="hint">saved in this browser after the first save</span></label>
+        <input id="f-key" type="password" autocomplete="off" placeholder="github_pat_…" />
+        <p class="hint" id="token-help">Needed once per browser to save into GitHub.
+          <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Create a token</a>:
+          Repository access → Only select repositories → <strong>amazon-finds</strong>;
+          Permissions → Contents → <strong>Read and write</strong>.</p>
 
         <p class="form-error" id="form-error" role="alert"></p>
         <div class="form-actions">
@@ -67,7 +71,6 @@
 
   <div class="toast" id="toast" role="status"></div>
 
-  <script src="reels-config.js"></script>
   <script src="reels.js"></script>
 </body>
 </html>
