@@ -49,7 +49,7 @@ function renderAgeChips() {
   }
   if (state.age !== "all" && !ages.has(state.age)) state.age = "all";
   box.hidden = false;
-  const sorted = AGE_ORDER.filter(a => ages.has(a));
+  const sorted = [...AGE_ORDER.filter(a => ages.has(a)), ...[...ages].filter(a => !AGE_ORDER.includes(a)).sort()];
   box.innerHTML = `<span class="label">Age:</span>` +
     ["all", ...sorted].map(a => `<button type="button" class="chip small${state.age === a ? " active" : ""}" data-age="${escapeHTML(a)}">${a === "all" ? "All ages" : escapeHTML(a)}</button>`).join("");
 }
@@ -117,8 +117,32 @@ async function copy(text, msg) {
   }
 }
 
-function init() {
+function updateTotal() {
   $("total-count").textContent = FINDS.filter(i => i.l).length;
+}
+
+async function loadLive() {
+  const status = $("source-status");
+  if (typeof loadSheet !== "function") { status.textContent = ""; return; }
+  let result = { loaded: [], failed: [] };
+  try { result = await loadSheet(); } catch {}
+  const { loaded, failed } = result;
+  if (!loaded.length) {
+    status.textContent = "Showing saved copy (couldn't reach the Google Sheet)";
+    status.classList.add("warn");
+    return;
+  }
+  status.textContent = failed.length
+    ? `Live from Google Sheet · saved copy for: ${failed.join(", ")}`
+    : "Live from Google Sheet";
+  status.classList.toggle("warn", failed.length > 0);
+  if (!CATEGORIES.some(c => c.id === state.cat)) state.cat = "all";
+  updateTotal();
+  render();
+}
+
+function init() {
+  updateTotal();
 
   const p = new URLSearchParams(location.search);
   if (CATEGORIES.some(c => c.id === p.get("cat"))) state.cat = p.get("cat");
@@ -159,6 +183,7 @@ function init() {
   render();
   const active = document.querySelector("#cat-chips .active");
   if (active) active.scrollIntoView({ block: "nearest", inline: "center" });
+  loadLive();
 }
 
 document.addEventListener("DOMContentLoaded", init);

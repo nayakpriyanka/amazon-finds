@@ -79,6 +79,8 @@ body {
   display: flex; justify-content: space-between; align-items: center;
   flex-wrap: wrap; gap: .6rem; padding-block: 1rem .6rem;
 }
+.source { display: block; font-size: .75rem; color: #1a6640; margin-top: .1rem; }
+.source.warn { color: #9a5b00; }
 #result-count { font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
 .result-actions { display: flex; gap: .4rem; flex-wrap: wrap; }
 .result-actions button {

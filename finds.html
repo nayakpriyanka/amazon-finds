@@ -29,7 +29,10 @@
 
   <main class="wrap">
     <div class="result-bar">
-      <span id="result-count" aria-live="polite"></span>
+      <div>
+        <span id="result-count" aria-live="polite"></span>
+        <span class="source" id="source-status">Loading latest from Google Sheet…</span>
+      </div>
       <div class="result-actions">
         <button type="button" id="copy-all">📋 Copy all links</button>
         <button type="button" id="copy-view">🔗 Copy link to this view</button>
@@ -41,6 +44,8 @@
   <div class="toast" id="toast" role="status"></div>
 
   <script src="finds-data.js"></script>
+  <script src="sheet-config.js"></script>
+  <script src="sheet-sync.js"></script>
   <script src="finds.js"></script>
 </body>
 </html>
